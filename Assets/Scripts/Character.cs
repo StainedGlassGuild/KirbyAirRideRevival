@@ -25,16 +25,29 @@ namespace FXGuild.Karr
 {
    public class Character : MonoBehaviour
    {
-      private const float VEHICULE_SPEED = 1f;
+      private const float VEHICULE_SPEED = 1500f;
+      private const float ROTATION_POWER = 350f;
+      private const float MAX_SPEED = 20f;
+      private const float MAX_ANGULAR_VELOCITY = 3f;
 
       #region Methods
 
       [UsedImplicitly]
       private void Update()
       {
-         var pos = transform.position;
-         pos += Vector3.forward * Time.deltaTime * VEHICULE_SPEED;
-         transform.position = pos;
+         var rb = GetComponent<Rigidbody>();
+
+         if (rb.velocity.magnitude < MAX_SPEED)
+         {
+            float vert = Input.GetAxis("Vertical");
+            rb.AddForce(vert * transform.forward * Time.deltaTime * VEHICULE_SPEED);
+         }
+
+         if (rb.angularVelocity.magnitude < MAX_ANGULAR_VELOCITY)
+         {
+            float hori = Input.GetAxis("Horizontal");
+            rb.AddTorque(hori * Vector3.up * Time.deltaTime * ROTATION_POWER);
+         }
       }
 
       #endregion
