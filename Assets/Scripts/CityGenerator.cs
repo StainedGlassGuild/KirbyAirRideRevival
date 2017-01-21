@@ -27,7 +27,14 @@ namespace FXGuild.Karr
    {
       #region Compile-time constants
 
-      private const float CITY_SIZE = 100;
+      private const float CITY_DIMENSIONS = 100;
+
+      private const uint NUM_BUILDINGS = 30;
+
+      private const float MIN_BUILDING_LATERAL_SIZE = 2f;
+      private const float MAX_BUILDING_LATERAL_SIZE = 6f;
+      private const float MIN_BUILDING_HEIGHT = 3f;
+      private const float MAX_BUILDING_HEIGHT = 5f;
 
       #endregion
 
@@ -36,9 +43,33 @@ namespace FXGuild.Karr
       [UsedImplicitly]
       private void Start()
       {
+         // Create City ground
          var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
-         plane.transform.localScale = new Vector3(CITY_SIZE, 1, CITY_SIZE);
+         plane.transform.localScale = new Vector3(CITY_DIMENSIONS / 10f, 1, CITY_DIMENSIONS / 10f);
          plane.transform.position = Vector3.zero;
+
+         // Randomly create some buildings
+         for (uint i = 0; i < NUM_BUILDINGS; ++i)
+            AddRandomBuilding();
+      }
+
+      private void AddRandomBuilding()
+      {
+         var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+         var trans = cube.transform;
+         trans.parent = transform;
+
+         // Randomly pick dimensions
+         trans.localScale = new Vector3(
+            Random.Range(MIN_BUILDING_LATERAL_SIZE, MAX_BUILDING_LATERAL_SIZE),
+            Random.Range(MIN_BUILDING_LATERAL_SIZE, MAX_BUILDING_LATERAL_SIZE),
+            Random.Range(MIN_BUILDING_HEIGHT, MAX_BUILDING_HEIGHT));
+
+         // Random pick position
+         trans.position = new Vector3(
+            Random.Range(0, CITY_DIMENSIONS) - CITY_DIMENSIONS / 2f,
+            trans.localScale.y / 2f,
+            Random.Range(0, CITY_DIMENSIONS) - CITY_DIMENSIONS / 2f);
       }
 
       #endregion
