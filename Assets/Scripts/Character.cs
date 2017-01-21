@@ -23,22 +23,18 @@ using UnityEngine;
 
 namespace FXGuild.Karr
 {
-   public class CityGenerator : MonoBehaviour
+   public class Character : MonoBehaviour
    {
-      #region Compile-time constants
-
-      private const float CITY_SIZE = 100;
-
-      #endregion
+      private const float VEHICULE_SPEED = 1f;
 
       #region Methods
 
       [UsedImplicitly]
-      private void Start()
+      private void Update()
       {
-         var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
-         plane.transform.localScale = new Vector3(CITY_SIZE, 1, CITY_SIZE);
-         plane.transform.position = Vector3.zero;
+         var pos = transform.position;
+         pos += Vector3.forward * Time.deltaTime * VEHICULE_SPEED;
+         transform.position = pos;
       }
 
       #endregion
