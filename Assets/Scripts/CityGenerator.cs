@@ -45,8 +45,10 @@ namespace FXGuild.Karr
       {
          // Create City ground
          var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+         plane.name = "City Ground";
          plane.transform.localScale = new Vector3(CITY_DIMENSIONS / 10f, 1, CITY_DIMENSIONS / 10f);
          plane.transform.position = Vector3.zero;
+         plane.GetComponent<MeshRenderer>().material = MaterialRepository.Instance.Tarmac;
 
          // Randomly create some buildings
          for (uint i = 0; i < NUM_BUILDINGS; ++i)
@@ -56,6 +58,7 @@ namespace FXGuild.Karr
       private void AddRandomBuilding()
       {
          var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+         cube.name = "Building";
          var trans = cube.transform;
          trans.parent = transform;
 
@@ -70,6 +73,9 @@ namespace FXGuild.Karr
             Random.Range(0, CITY_DIMENSIONS) - CITY_DIMENSIONS / 2f,
             trans.localScale.y / 2f,
             Random.Range(0, CITY_DIMENSIONS) - CITY_DIMENSIONS / 2f);
+
+         // Set material
+         cube.GetComponent<MeshRenderer>().material = MaterialRepository.Instance.Building;
       }
 
       #endregion
