@@ -76,6 +76,17 @@ namespace FXGuild.Karr
 
          // Set material
          cube.GetComponent<MeshRenderer>().material = MaterialRepository.Instance.Building;
+
+         // 30 % of building are placed to become ramps
+         if (Random.value < 0.3)
+         {
+            var pos = trans.position;
+            pos.y = -1.5f;
+            trans.position = pos;
+            var angles = trans.rotation.eulerAngles;
+            angles.x = 30;
+            trans.rotation = Quaternion.Euler(angles);
+         }
       }
 
       #endregion
