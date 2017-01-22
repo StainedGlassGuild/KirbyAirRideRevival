@@ -26,7 +26,7 @@ namespace FXGuild.Karr
    public class Character : MonoBehaviour
    {
       private const float VEHICULE_SPEED = 1500f;
-      private const float ROTATION_POWER = 350f;
+      private const float ROTATION_POWER = 150f;
       private const float MAX_SPEED = 20f;
       private const float MAX_ANGULAR_VELOCITY = 3f;
 
@@ -39,13 +39,13 @@ namespace FXGuild.Karr
 
          if (rb.velocity.magnitude < MAX_SPEED)
          {
-            float vert = Input.GetAxis("Vertical");
+            float vert = Input.GetAxis("Secondary Vertical");
             rb.AddForce(vert * transform.forward * Time.deltaTime * VEHICULE_SPEED);
          }
 
          if (rb.angularVelocity.magnitude < MAX_ANGULAR_VELOCITY)
          {
-            float hori = Input.GetAxis("Horizontal");
+            float hori = Input.GetAxis("Main Horizontal");
             rb.AddTorque(hori * Vector3.up * Time.deltaTime * ROTATION_POWER);
          }
       }
