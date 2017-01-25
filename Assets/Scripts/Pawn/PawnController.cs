@@ -17,40 +17,27 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using FXGuild.Karr.Pawn;
-
 using JetBrains.Annotations;
 
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace FXGuild.Karr
+namespace FXGuild.Karr.Pawn
 {
-   public class DebugOverlay : MonoBehaviour
+   public class PawnController : MonoBehaviour
    {
+      #region Compile-time constants
+
+      private const float VEHICULE_SPEED = 45000f;
+      private const float ROTATION_POWER = 1000f;
+      private const float MAX_SPEED = 20f;
+      private const float MAX_ANGULAR_VELOCITY = 3f;
+
+      #endregion
+
       #region Private fields
 
-      private Vector3 m_PrevVelocity;
-
-      #endregion
-
-      #region Public fields
-
       [SerializeField, UsedImplicitly]
-      private PawnController m_PawnController;
-
-      #endregion
-
-      #region Static methods
-
-      private static void SetText(Transform a_Transform,
-                                  string a_Property,
-                                  string a_Format,
-                                  params object[] a_Args)
-      {
-         var textComponent = a_Transform.FindChild(a_Property).GetComponent<Text>();
-         textComponent.text = string.Format(a_Format, a_Args);
-      }
+      private APawnInputSource m_PawnInputSrc;
 
       #endregion
 
@@ -59,14 +46,19 @@ namespace FXGuild.Karr
       [UsedImplicitly]
       private void Update()
       {
-         // Update physics info panel
-         var panel = transform.FindChild("Physics info panel");
-         var rb = m_PawnController.GetComponent<Rigidbody>();
-         var velocity = rb.velocity;
-         SetText(panel, "Speed", "{0:##0.0}", velocity.magnitude);
-         SetText(panel, "Acceleration", "{0:##0.0}", (velocity - m_PrevVelocity).magnitude);
-         SetText(panel, "Angular velocity", "{0:##0.0}", rb.angularVelocity.magnitude);
-         m_PrevVelocity = velocity;
+         var rb = GetComponent<Rigidbody>();
+
+         if (rb.velocity.magnitude < MAX_SPEED)
+         {
+            float acceleration = m_PawnInputSrc.ForwardAcceleration;
+            rb.AddForce(acceleration * transform.forward * Time.deltaTime * VEHICULE_SPEED);
+         }
+
+         if (rb.angularVelocity.magnitude < MAX_ANGULAR_VELOCITY)
+         {
+            float rotation = m_PawnInputSrc.RotationAcceleration;
+            rb.AddTorque(rotation * Vector3.up * Time.deltaTime * ROTATION_POWER);
+         }
       }
 
       #endregion

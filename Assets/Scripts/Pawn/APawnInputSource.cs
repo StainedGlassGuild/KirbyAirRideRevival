@@ -17,38 +17,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using JetBrains.Annotations;
-
 using UnityEngine;
 
-namespace FXGuild.Karr
+namespace FXGuild.Karr.Pawn
 {
-   public class Character : MonoBehaviour
+   public abstract class APawnInputSource : MonoBehaviour
    {
-      private const float VEHICULE_SPEED = 45000f;
-      private const float ROTATION_POWER = 1000f;
-      private const float MAX_SPEED = 20f;
-      private const float MAX_ANGULAR_VELOCITY = 3f;
-      public AnimationCurve myCurve;
-      #region Methods
+      #region Properties
 
-      [UsedImplicitly]
-      private void Update()
-      {
-         var rb = GetComponent<Rigidbody>();
-
-         if (rb.velocity.magnitude < MAX_SPEED)
-         {
-            float vert = Input.GetAxis("Secondary Vertical");
-            rb.AddForce(vert * transform.forward * Time.deltaTime * VEHICULE_SPEED);
-         }
-
-         if (rb.angularVelocity.magnitude < MAX_ANGULAR_VELOCITY)
-         {
-            float hori = Input.GetAxis("Main Horizontal");
-            rb.AddTorque(hori * Vector3.up * Time.deltaTime * ROTATION_POWER);
-         }
-      }
+      public abstract float ForwardAcceleration { get; }
+      public abstract float RotationAcceleration { get; }
 
       #endregion
    }

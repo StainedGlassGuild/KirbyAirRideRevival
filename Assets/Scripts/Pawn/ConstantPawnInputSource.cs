@@ -17,56 +17,34 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using FXGuild.Karr.Pawn;
-
 using JetBrains.Annotations;
 
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace FXGuild.Karr
+namespace FXGuild.Karr.Pawn
 {
-   public class DebugOverlay : MonoBehaviour
+   public sealed class ConstantPawnInputSource : APawnInputSource
    {
       #region Private fields
 
-      private Vector3 m_PrevVelocity;
-
-      #endregion
-
-      #region Public fields
+      [SerializeField, UsedImplicitly]
+      private float m_ForwardAcceleration;
 
       [SerializeField, UsedImplicitly]
-      private PawnController m_PawnController;
+      private float m_RotationAcceleration;
 
       #endregion
 
-      #region Static methods
+      #region Properties
 
-      private static void SetText(Transform a_Transform,
-                                  string a_Property,
-                                  string a_Format,
-                                  params object[] a_Args)
+      public override float ForwardAcceleration
       {
-         var textComponent = a_Transform.FindChild(a_Property).GetComponent<Text>();
-         textComponent.text = string.Format(a_Format, a_Args);
+         get { return m_ForwardAcceleration; }
       }
 
-      #endregion
-
-      #region Methods
-
-      [UsedImplicitly]
-      private void Update()
+      public override float RotationAcceleration
       {
-         // Update physics info panel
-         var panel = transform.FindChild("Physics info panel");
-         var rb = m_PawnController.GetComponent<Rigidbody>();
-         var velocity = rb.velocity;
-         SetText(panel, "Speed", "{0:##0.0}", velocity.magnitude);
-         SetText(panel, "Acceleration", "{0:##0.0}", (velocity - m_PrevVelocity).magnitude);
-         SetText(panel, "Angular velocity", "{0:##0.0}", rb.angularVelocity.magnitude);
-         m_PrevVelocity = velocity;
+         get { return m_RotationAcceleration; }
       }
 
       #endregion
