@@ -27,14 +27,14 @@ namespace FXGuild.Karr
    {
       #region Compile-time constants
 
-      private const float CITY_DIMENSIONS = 100;
+      private const float CITY_DIMENSIONS = 1000;
 
-      private const uint NUM_BUILDINGS = 30;
+      private const uint NUM_BUILDINGS = 50;
 
-      private const float MIN_BUILDING_LATERAL_SIZE = 2f;
-      private const float MAX_BUILDING_LATERAL_SIZE = 6f;
-      private const float MIN_BUILDING_HEIGHT = 3f;
-      private const float MAX_BUILDING_HEIGHT = 5f;
+      private const float MIN_BUILDING_LATERAL_SIZE = 10f;
+      private const float MAX_BUILDING_LATERAL_SIZE = 30f;
+      private const float MIN_BUILDING_HEIGHT = 5f;
+      private const float MAX_BUILDING_HEIGHT = 25f;
 
       #endregion
 

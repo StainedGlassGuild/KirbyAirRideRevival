@@ -25,11 +25,11 @@ namespace FXGuild.Karr
 {
    public class Character : MonoBehaviour
    {
-      private const float VEHICULE_SPEED = 1500f;
-      private const float ROTATION_POWER = 150f;
+      private const float VEHICULE_SPEED = 45000f;
+      private const float ROTATION_POWER = 1000f;
       private const float MAX_SPEED = 20f;
       private const float MAX_ANGULAR_VELOCITY = 3f;
-
+      public AnimationCurve myCurve;
       #region Methods
 
       [UsedImplicitly]
