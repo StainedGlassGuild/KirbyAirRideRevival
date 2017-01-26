@@ -17,6 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using FXGuild.Karr.Pawn.Input;
+
 using JetBrains.Annotations;
 
 using UnityEngine;
@@ -25,39 +27,92 @@ namespace FXGuild.Karr.Pawn
 {
    public class PawnController : MonoBehaviour
    {
-      #region Compile-time constants
-
-      private const float VEHICULE_SPEED = 45000f;
-      private const float ROTATION_POWER = 1000f;
-      private const float MAX_SPEED = 20f;
-      private const float MAX_ANGULAR_VELOCITY = 3f;
-
-      #endregion
-
       #region Private fields
 
       [SerializeField, UsedImplicitly]
+      private float m_EnginePower;
+
+      [SerializeField, UsedImplicitly]
+      private float m_AngularPower;
+
+      [SerializeField, UsedImplicitly]
+      private float m_MaxAngularVelocity;
+
+      [SerializeField, UsedImplicitly]
+      private float m_MaxSpeed;
+
+      [SerializeField, UsedImplicitly]
       private APawnInputSource m_PawnInputSrc;
+
+      [SerializeField, UsedImplicitly]
+      private float m_AccelerationStabilisationFactor;
+
+      [SerializeField, UsedImplicitly]
+      private float m_SpeedBias;
+
+      [SerializeField, UsedImplicitly]
+      private TimeGraph m_Graph;
+
+      private Quaternion m_PrevRotation;
 
       #endregion
 
       #region Methods
 
       [UsedImplicitly]
+      private void Start()
+      {
+         m_Graph.m_dataSets = new[] {new TimeGraphDataSet {m_displayColor = Color.cyan}};
+         m_Graph.m_dataSets[0].SetMaxEntries(100);
+         m_PrevRotation = transform.rotation;
+      }
+
+      [UsedImplicitly]
       private void Update()
       {
          var rb = GetComponent<Rigidbody>();
-
-         if (rb.velocity.magnitude < MAX_SPEED)
+         float speed = rb.velocity.magnitude;
+         m_Graph.m_dataSets[0].PushData(speed);
          {
-            float acceleration = m_PawnInputSrc.ForwardAcceleration;
-            rb.AddForce(acceleration * transform.forward * Time.deltaTime * VEHICULE_SPEED);
+            var engineForce = transform.forward;
+            engineForce *= Time.deltaTime;
+            engineForce *= m_EnginePower;
+            engineForce *= m_PawnInputSrc.ForwardAcceleration;
+            float speedGap = m_MaxSpeed - speed + m_SpeedBias;
+            engineForce *= 1 -
+                           Mathf.Exp(-(speedGap * speedGap) / m_AccelerationStabilisationFactor);
+            rb.AddForce(engineForce);
          }
 
-         if (rb.angularVelocity.magnitude < MAX_ANGULAR_VELOCITY)
+         #region Adjust rotation
+
+         // Limit angular velocity to a maximum value
+         if (rb.angularVelocity.magnitude < m_MaxAngularVelocity)
          {
-            float rotation = m_PawnInputSrc.RotationAcceleration;
-            rb.AddTorque(rotation * Vector3.up * Time.deltaTime * ROTATION_POWER);
+            // Add torque force according to pawn inputs
+            var torque = Vector3.up;
+            torque *= Time.deltaTime;
+            torque *= m_AngularPower;
+            torque *= m_PawnInputSrc.RotationAcceleration;
+            rb.AddTorque(torque);
+         }
+
+         // Limit rotation to axis Y
+         var rotation = transform.rotation;
+         rotation.eulerAngles = Vector3.up * rotation.eulerAngles.y;
+         transform.rotation = rotation;
+
+         if (Quaternion.Angle(transform.rotation, m_PrevRotation) < 0.01f)
+            transform.rotation = m_PrevRotation;
+         m_PrevRotation = transform.rotation;
+
+         #endregion
+
+         var pos = transform.position;
+         if (pos.z > 300)
+         {
+            pos.z -= 300;
+            transform.position = pos;
          }
       }
 

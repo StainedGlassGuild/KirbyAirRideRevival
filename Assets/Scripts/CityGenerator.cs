@@ -17,6 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using FXGuild.Karr.AssetRepository;
+
 using JetBrains.Annotations;
 
 using UnityEngine;
@@ -49,6 +51,7 @@ namespace FXGuild.Karr
          plane.transform.localScale = new Vector3(CITY_DIMENSIONS / 10f, 1, CITY_DIMENSIONS / 10f);
          plane.transform.position = Vector3.zero;
          plane.GetComponent<MeshRenderer>().material = MaterialRepository.Instance.Tarmac;
+         plane.GetComponent<Collider>().material = PhysicMaterialRepository.Instance.Tarmac;
 
          // Randomly create some buildings
          for (uint i = 0; i < NUM_BUILDINGS; ++i)

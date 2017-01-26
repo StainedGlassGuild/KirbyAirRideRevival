@@ -21,29 +21,30 @@ using JetBrains.Annotations;
 
 using UnityEngine;
 
-namespace FXGuild.Karr.AssetRepository
+namespace FXGuild.Karr.Pawn.Input
 {
-   public class MaterialRepository : MonoBehaviour
+   public sealed class ConstantPawnInputSource : APawnInputSource
    {
-      #region Public fields
+      #region Private fields
 
-      public Material Building;
-      public Material Tarmac;
+      [SerializeField, UsedImplicitly]
+      private float m_ForwardAcceleration;
+
+      [SerializeField, UsedImplicitly]
+      private float m_RotationAcceleration;
 
       #endregion
 
       #region Properties
 
-      public static MaterialRepository Instance { get; private set; }
-
-      #endregion
-
-      #region Methods
-
-      [UsedImplicitly]
-      private void Awake()
+      public override float ForwardAcceleration
       {
-         Instance = this;
+         get { return m_ForwardAcceleration; }
+      }
+
+      public override float RotationAcceleration
+      {
+         get { return m_RotationAcceleration; }
       }
 
       #endregion

@@ -19,14 +19,21 @@
 
 using UnityEngine;
 
-namespace FXGuild.Karr.Pawn
+namespace FXGuild.Karr.Pawn.Input
 {
-   public abstract class APawnInputSource : MonoBehaviour
+   public sealed class PlayerPawnInputSource : APawnInputSource
    {
       #region Properties
 
-      public abstract float ForwardAcceleration { get; }
-      public abstract float RotationAcceleration { get; }
+      public override float ForwardAcceleration
+      {
+         get { return UnityEngine.Input.GetAxis("Secondary Vertical"); }
+      }
+
+      public override float RotationAcceleration
+      {
+         get { return UnityEngine.Input.GetAxis("Main Horizontal"); }
+      }
 
       #endregion
    }

@@ -17,22 +17,32 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using JetBrains.Annotations;
+
 using UnityEngine;
 
-namespace FXGuild.Karr.Pawn
+namespace FXGuild.Karr.AssetRepository
 {
-   public sealed class PlayerPawnInputSource : APawnInputSource
+   public class PhysicMaterialRepository : MonoBehaviour
    {
+      #region Public fields
+
+      public PhysicMaterial Tarmac;
+
+      #endregion
+
       #region Properties
 
-      public override float ForwardAcceleration
-      {
-         get { return Input.GetAxis("Secondary Vertical"); }
-      }
+      public static PhysicMaterialRepository Instance { get; private set; }
 
-      public override float RotationAcceleration
+      #endregion
+
+      #region Methods
+
+      [UsedImplicitly]
+      private void Awake()
       {
-         get { return Input.GetAxis("Main Horizontal"); }
+         Instance = this;
       }
 
       #endregion
