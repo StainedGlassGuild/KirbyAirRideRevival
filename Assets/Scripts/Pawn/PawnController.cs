@@ -25,97 +25,96 @@ using UnityEngine;
 
 namespace FXGuild.Karr.Pawn
 {
-   public class PawnController : MonoBehaviour
-   {
-      #region Private fields
+    public class PawnController : MonoBehaviour
+    {
+        #region Private fields
 
-      [SerializeField, UsedImplicitly]
-      private float m_EnginePower;
+        [SerializeField, UsedImplicitly]
+        private float m_EnginePower;
 
-      [SerializeField, UsedImplicitly]
-      private float m_AngularPower;
+        [SerializeField, UsedImplicitly]
+        private float m_AngularPower;
 
-      [SerializeField, UsedImplicitly]
-      private float m_MaxAngularVelocity;
+        [SerializeField, UsedImplicitly]
+        private float m_MaxAngularVelocity;
 
-      [SerializeField, UsedImplicitly]
-      private float m_MaxSpeed;
+        [SerializeField, UsedImplicitly]
+        private float m_MaxSpeed;
 
-      [SerializeField, UsedImplicitly]
-      private APawnInputSource m_PawnInputSrc;
+        [SerializeField, UsedImplicitly]
+        private APawnInputSource m_PawnInputSrc;
 
-      [SerializeField, UsedImplicitly]
-      private float m_AccelerationStabilisationFactor;
+        [SerializeField, UsedImplicitly]
+        private float m_AccelerationStabilisation;
 
-      [SerializeField, UsedImplicitly]
-      private float m_SpeedBias;
+        [SerializeField, UsedImplicitly]
+        private float m_SpeedBias;
 
-      [SerializeField, UsedImplicitly]
-      private TimeGraph m_Graph;
+        private Quaternion m_PrevRotation;
 
-      private Quaternion m_PrevRotation;
+        #endregion
 
-      #endregion
+        #region Methods
 
-      #region Methods
+        [UsedImplicitly]
+        private void Start()
+        {
+            m_PrevRotation = transform.rotation;
+        }
 
-      [UsedImplicitly]
-      private void Start()
-      {
-         m_Graph.m_dataSets = new[] {new TimeGraphDataSet {m_displayColor = Color.cyan}};
-         m_Graph.m_dataSets[0].SetMaxEntries(100);
-         m_PrevRotation = transform.rotation;
-      }
+        [UsedImplicitly]
+        private void Update()
+        {
+            var rb = GetComponent<Rigidbody>();
 
-      [UsedImplicitly]
-      private void Update()
-      {
-         var rb = GetComponent<Rigidbody>();
-         float speed = rb.velocity.magnitude;
-         m_Graph.m_dataSets[0].PushData(speed);
-         {
+            #region Handle engine force
+
             var engineForce = transform.forward;
             engineForce *= Time.deltaTime;
             engineForce *= m_EnginePower;
             engineForce *= m_PawnInputSrc.ForwardAcceleration;
-            float speedGap = m_MaxSpeed - speed + m_SpeedBias;
-            engineForce *= 1 -
-                           Mathf.Exp(-(speedGap * speedGap) / m_AccelerationStabilisationFactor);
+            float speedGap = m_MaxSpeed - rb.velocity.magnitude + m_SpeedBias;
+            engineForce *= 1 - Mathf.Exp(-(speedGap * speedGap) / m_AccelerationStabilisation);
             rb.AddForce(engineForce);
-         }
+            
+            #endregion
 
-         #region Adjust rotation
+            #region Adjust rotation
 
-         // Limit angular velocity to a maximum value
-         if (rb.angularVelocity.magnitude < m_MaxAngularVelocity)
-         {
-            // Add torque force according to pawn inputs
-            var torque = Vector3.up;
-            torque *= Time.deltaTime;
-            torque *= m_AngularPower;
-            torque *= m_PawnInputSrc.RotationAcceleration;
-            rb.AddTorque(torque);
-         }
+            // Limit angular velocity to a maximum value
+            if (rb.angularVelocity.magnitude < m_MaxAngularVelocity)
+            {
+                // Add torque force according to pawn inputs
+                var torque = Vector3.up;
+                torque *= Time.deltaTime;
+                torque *= m_AngularPower;
+                torque *= m_PawnInputSrc.RotationAcceleration;
+                rb.AddTorque(torque);
+            }
+            
+            // Limit rotation to axis Y
+            var rotation = transform.rotation;
+            rotation.eulerAngles = Vector3.up * rotation.eulerAngles.y;
+            transform.rotation = rotation;
 
-         // Limit rotation to axis Y
-         var rotation = transform.rotation;
-         rotation.eulerAngles = Vector3.up * rotation.eulerAngles.y;
-         transform.rotation = rotation;
+            // TODO: check why there's a small constant rotation force to ignore
+            if (Quaternion.Angle(transform.rotation, m_PrevRotation) < 0.01f)
+            {
+                transform.rotation = m_PrevRotation;
+            }
+            m_PrevRotation = transform.rotation;
 
-         if (Quaternion.Angle(transform.rotation, m_PrevRotation) < 0.01f)
-            transform.rotation = m_PrevRotation;
-         m_PrevRotation = transform.rotation;
+            #endregion
 
-         #endregion
+            // TODO remove this hack
+            var pos = transform.position;
+            if (pos.z > 300)
+            {
+                pos.z -= 300;
+                transform.position = pos;
+            }
+        }
 
-         var pos = transform.position;
-         if (pos.z > 300)
-         {
-            pos.z -= 300;
-            transform.position = pos;
-         }
-      }
-
-      #endregion
-   }
+        #endregion
+    }
 }
