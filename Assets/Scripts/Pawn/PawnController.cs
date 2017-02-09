@@ -30,7 +30,13 @@ namespace FXGuild.Karr.Pawn
         #region Private fields
 
         [SerializeField, UsedImplicitly]
-        private float m_EnginePower;
+        private float m_EnginePowerForward;
+
+        [SerializeField, UsedImplicitly]
+        private float m_EnginePowerBrakes;
+
+        [SerializeField, UsedImplicitly]
+        private float m_EnginePowerBackward;
 
         [SerializeField, UsedImplicitly]
         private float m_AngularPower;
@@ -39,7 +45,10 @@ namespace FXGuild.Karr.Pawn
         private float m_MaxAngularVelocity;
 
         [SerializeField, UsedImplicitly]
-        private float m_MaxSpeed;
+        private float m_MaxSpeedForward;
+
+        [SerializeField, UsedImplicitly]
+        private float m_MaxSpeedBackward;
 
         [SerializeField, UsedImplicitly]
         private APawnInputSource m_PawnInputSrc;
@@ -71,12 +80,21 @@ namespace FXGuild.Karr.Pawn
 
             var engineForce = transform.forward;
             engineForce *= Time.deltaTime;
-            engineForce *= m_EnginePower;
+            engineForce *= m_PawnInputSrc.ForwardAcceleration > 0
+                ? m_EnginePowerForward
+                : Vector3.Dot(rb.velocity, transform.forward) > 0
+                    ? m_EnginePowerBrakes
+                    : m_EnginePowerBackward;
             engineForce *= m_PawnInputSrc.ForwardAcceleration;
-            float speedGap = m_MaxSpeed - rb.velocity.magnitude + m_SpeedBias;
+            float speedGap = m_MaxSpeedForward - rb.velocity.magnitude + m_SpeedBias;
             engineForce *= 1 - Mathf.Exp(-(speedGap * speedGap) / m_AccelerationStabilisation);
-            rb.AddForce(engineForce);
-            
+            if (rb.velocity.magnitude < (m_PawnInputSrc.ForwardAcceleration > 0
+                ? m_MaxSpeedForward
+                : m_MaxSpeedBackward))
+            {
+                rb.AddForce(engineForce);
+            }
+
             #endregion
 
             #region Adjust rotation
@@ -91,7 +109,7 @@ namespace FXGuild.Karr.Pawn
                 torque *= m_PawnInputSrc.RotationAcceleration;
                 rb.AddTorque(torque);
             }
-            
+
             // Limit rotation to axis Y
             var rotation = transform.rotation;
             rotation.eulerAngles = Vector3.up * rotation.eulerAngles.y;
