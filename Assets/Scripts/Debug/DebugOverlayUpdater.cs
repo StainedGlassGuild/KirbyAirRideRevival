@@ -17,10 +17,11 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Linq;
+using System.Collections.Generic;
 
 using FXGuild.Karr.Debug;
 using FXGuild.Karr.Vehicles;
+using FXGuild.Karr.Vehicles.Model;
 
 using JetBrains.Annotations;
 
@@ -29,87 +30,96 @@ using UnityEngine.UI;
 
 namespace FXGuild.Karr
 {
-    public class DebugOverlayUpdater : MonoBehaviour
-    {
-        #region Compile-time constants
+   public class DebugOverlayUpdater : MonoBehaviour
+   {
+      #region Compile-time constants
 
-        private const float ANGULAR_SPEED_READABILITY_SCALE_FACTOR = 10f;
+      private const float ANGULAR_SPEED_READABILITY_SCALE_FACTOR = 10f;
 
-        // Used to smooth acceleration computation
-        private const int VELOCIY_HISTORY_SIZE = 10;
+      #endregion
 
-        #endregion
+      #region Runtime constants
 
-        #region Private fields
+      public static readonly Dictionary<Vehicle.PhysicsState, Color> PHYSICS_STATE_COLORS =
+         new Dictionary<Vehicle.PhysicsState, Color>
+         {
+            {Vehicle.PhysicsState.Idle, Color.black},
+            {Vehicle.PhysicsState.Accelerating_forward, Color.magenta},
+            {Vehicle.PhysicsState.Accelerating_backward, Color.cyan},
+            {Vehicle.PhysicsState.Loose_forward, Color.magenta * 0.6f},
+            {Vehicle.PhysicsState.Loose_backward, Color.cyan * 0.75f},
+            {Vehicle.PhysicsState.Braking, Color.red},
+            {Vehicle.PhysicsState.Falling, Color.white},
+            {Vehicle.PhysicsState.Flying, Color.yellow}
+         };
 
-        [SerializeField, UsedImplicitly]
-        private Vehicle m_Vehicle;
+      #endregion
 
-        private Vector3[] m_AccelerationHistory;
-        private int m_AccelerationHistoryIdx;
-        private Vector3 m_PrevVelocity;
+      #region Private fields
 
-        #endregion
+      [SerializeField, UsedImplicitly]
+      private Vehicle m_Vehicle;
 
-        #region Methods
+      #endregion
 
-        [UsedImplicitly]
-        private void Start()
-        {
-            m_AccelerationHistory = new Vector3[VELOCIY_HISTORY_SIZE];
-            m_AccelerationHistoryIdx = 0;
-            m_PrevVelocity = Vector3.zero;
-        }
+      #region Methods
 
-        private void UpdatePanel(string a_Name, string a_UnitName, params float[] a_Value)
-        {
-            // Get child panel
-            var panel = transform.FindChild(a_Name);
+      private void UpdateGraphs()
+      {
+         // Get the rigidbody of the monitored vehicle
+         var rb = m_Vehicle.transform.GetComponent<Rigidbody>();
 
-            // Update metric value label
-            var text = panel.FindChild("Value").GetComponent<Text>();
-            text.text = string.Format("{0:##0.0} {1}", a_Value[0], a_UnitName);
+         // Update speed panel
+         UpdatePanel("Speed", "km/h", m_Vehicle.ForwardSpeed, rb.velocity.magnitude);
 
-            // Update metric graph
-            var graph = panel.FindChild("Graph").GetComponent<DebugGraph>();
-            graph.PushData(a_Value[0]);
+         // Update acceleration panel
+         UpdatePanel("Acceleration", "km/h²", m_Vehicle.SmoothedForwardAcceleration,
+            m_Vehicle.SmoothedAcceleration.magnitude);
 
-            // Some graphs may have an absolute speed secondary graph curve
-            if (a_Value.Length != 2)
-            {
-                return;
-            }
+         // Update angular speed panel
+         // TODO do not use arbitrary unit
+         float angSpeed = rb.angularVelocity.y * ANGULAR_SPEED_READABILITY_SCALE_FACTOR;
+         UpdatePanel("AngularSpeed", "", angSpeed);
+      }
 
-            graph = panel.FindChild("Graph (absolute speed)").GetComponent<DebugGraph>();
-            graph.PushData(a_Value[1]);
-        }
+      private void UpdatePanel(string a_Name, string a_UnitName, params float[] a_Value)
+      {
+         // Get child panel
+         var panel = transform.FindChild(a_Name);
 
-        [UsedImplicitly]
-        private void FixedUpdate()
-        {
-            // Get the rigidbody of the monitored pawn controller
-            var rb = m_Vehicle.transform.GetComponent<Rigidbody>();
+         // Update metric value label
+         var text = panel.FindChild("Value").GetComponent<Text>();
+         text.text = string.Format("{0:##0.0} {1}", a_Value[0], a_UnitName);
 
-            // Update speed panel
-            float forwardSpeed = Vector3.Dot(rb.velocity, m_Vehicle.transform.forward);
-            UpdatePanel("Speed", "km/h", forwardSpeed, rb.velocity.magnitude);
+         // Update metric graph
+         var graph = panel.FindChild("Graph").GetComponent<DebugGraph>();
+         graph.PushData(a_Value[0]);
 
-            // Update acceleration panel
-            var delta = rb.velocity - m_PrevVelocity;
-            m_PrevVelocity = rb.velocity;
-            m_AccelerationHistory[m_AccelerationHistoryIdx] = delta / Time.fixedDeltaTime;
-            m_AccelerationHistoryIdx = (m_AccelerationHistoryIdx + 1) % VELOCIY_HISTORY_SIZE;
-            var acceleration = m_AccelerationHistory.Aggregate(Vector3.zero,
-                (a_Current, a_Velocity) => a_Current + a_Velocity) / VELOCIY_HISTORY_SIZE;
-            float forwardAccel = Vector3.Dot(acceleration, m_Vehicle.transform.forward);
-            UpdatePanel("Acceleration", "km/h²", forwardAccel, acceleration.magnitude);
+         // Some graphs may have an absolute speed secondary graph curve
+         if (a_Value.Length != 2)
+            return;
 
-            // Update angular speed panel
-            // TODO do not use arbitrary unit
-            float angSpeed = rb.angularVelocity.y * ANGULAR_SPEED_READABILITY_SCALE_FACTOR;
-            UpdatePanel("AngularSpeed", "", angSpeed);
-        }
+         graph = panel.FindChild("Graph (absolute speed)").GetComponent<DebugGraph>();
+         graph.PushData(a_Value[1]);
+      }
 
-        #endregion
-    }
+      [UsedImplicitly]
+      private void FixedUpdate()
+      {
+         UpdateGraphs();
+
+         // Update Physics state panel
+         var vehicule = m_Vehicle.GetComponentInChildren<AVehicleModel>();
+         var value = transform.FindChild("Physics State").FindChild("Value");
+         string state = m_Vehicle.CurrentPhysicsState.ToString().Replace("_", " ");
+         value.GetComponent<Text>().text = state;
+         value.GetComponent<Text>().color = PHYSICS_STATE_COLORS[m_Vehicle.CurrentPhysicsState];
+
+         // Update Vehicle stats panel
+         var values = transform.FindChild("Vehicle Stats").FindChild("Values");
+         values.GetComponent<Text>().text = vehicule.name.Replace(" Model", "");
+      }
+
+      #endregion
+   }
 }

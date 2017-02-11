@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Linq;
 
 using FXGuild.Karr.Vehicles.Input;
 
@@ -29,13 +30,42 @@ namespace FXGuild.Karr.Vehicles
 {
    public sealed class Vehicle : MonoBehaviour
    {
+      #region Nested types
+
+      // ReSharper disable InconsistentNaming
+      public enum PhysicsState
+      {
+         Idle,
+         Accelerating_forward,
+         Accelerating_backward,
+         Loose_forward,
+         Loose_backward,
+         Braking,
+         Falling,
+         Flying
+      }
+
+      #endregion
+
+      #region Compile-time constants
+
+      private const int VELOCIY_HISTORY_SIZE = 10;
+
+      #endregion
+
       #region Private fields
 
       [SerializeField, UsedImplicitly]
-      private APawnInputSource m_PawnInputSrc;
+      private APawnInputSource m_InputSrc;
 
       [SerializeField, UsedImplicitly]
       private VehicleProperties m_VehicleProperties;
+
+      private int m_AccelerationHistoryIdx;
+      private Vector3 m_PrevVelocity;
+      private Vector3[] m_AccelerationHistory;
+
+      private bool m_IsTouchingGround;
 
       #endregion
 
@@ -57,6 +87,25 @@ namespace FXGuild.Karr.Vehicles
          get { return Vector3.Dot(Velocity, transform.forward); }
       }
 
+      public float SidewaysSpeed
+      {
+         get { return Vector3.Dot(Velocity, transform.right); }
+      }
+
+      public Vector3 SmoothedAcceleration
+      {
+         get
+         {
+            return m_AccelerationHistory.Aggregate(Vector3.zero,
+               (a_Current, a_Velocity) => a_Current + a_Velocity) / VELOCIY_HISTORY_SIZE;
+         }
+      }
+
+      public float SmoothedForwardAcceleration
+      {
+         get { return Vector3.Dot(SmoothedAcceleration, transform.forward); }
+      }
+
       /// <summary>
       /// Value between 0 and 1 that tells how close is the current speed from the top speed.
       /// Works for both propulsion directions.
@@ -74,103 +123,160 @@ namespace FXGuild.Karr.Vehicles
          }
       }
 
+      public PhysicsState CurrentPhysicsState { get; private set; }
+
       #endregion
 
       #region Methods
 
       [UsedImplicitly]
+      private void Start()
+      {
+         m_AccelerationHistory = new Vector3[VELOCIY_HISTORY_SIZE];
+         m_AccelerationHistoryIdx = 0;
+         m_PrevVelocity = Vector3.zero;
+
+         m_IsTouchingGround = false;
+      }
+
+      [UsedImplicitly]
+      private void OnCollisionStay(Collision a_CollisionInfo)
+      {
+         foreach (var contact in a_CollisionInfo.contacts)
+            UnityEngine.Debug.DrawRay(contact.point, contact.normal * 10, Color.white);
+         m_IsTouchingGround = true;
+      }
+
+      [UsedImplicitly]
       private void FixedUpdate()
       {
-         var rb = GetComponent<Rigidbody>();
-
-         #region Engine propulsion
-
+         if (m_IsTouchingGround)
          {
-            // Force is in the local z axis
-            var force = transform.forward;
+            UpdateSmoothedAcceleration();
+            UpdateEnginePropulsion();
+            UpdateSideGrip();
+         }
+         else
+            CurrentPhysicsState = PhysicsState.Falling;
 
-            // Adjust acceleration according to framerate
-            force *= Time.fixedDeltaTime;
+         // Rotation is updated even in mid-air
+         UpdateRotation();
 
-            // Apply input acceleration
-            float acceleration = m_PawnInputSrc.ForwardAcceleration;
-            force *= acceleration;
+         // Let OnCollisionStay be called next frame to tell when vehicle is touching ground
+         m_IsTouchingGround = false;
+      }
 
-            // Check if we are accelerating in the same direction as we're going
-            if (Math.Sign(acceleration) == Math.Sign(ForwardSpeed))
+      private void UpdateSmoothedAcceleration()
+      {
+         var velocity = GetComponent<Rigidbody>().velocity;
+         var delta = velocity - m_PrevVelocity;
+         m_PrevVelocity = velocity;
+         m_AccelerationHistory[m_AccelerationHistoryIdx] = delta / Time.fixedDeltaTime;
+         m_AccelerationHistoryIdx = (m_AccelerationHistoryIdx + 1) % VELOCIY_HISTORY_SIZE;
+      }
+
+      private void UpdateEnginePropulsion()
+      {
+         // Obtain acceleration from input source
+         float inputAcceleration = m_InputSrc.ForwardAcceleration;
+
+         // Check there is some input
+         if (Mathf.Abs(inputAcceleration) < 1e-6)
+         {
+            CurrentPhysicsState = Mathf.Abs(ForwardSpeed) < 1e-3
+               ? PhysicsState.Idle
+               : ForwardSpeed > 0
+                  ? PhysicsState.Loose_forward
+                  : PhysicsState.Loose_backward;
+
+            // No propulsion needed
+            return;
+         }
+
+         // Force is in the local z axis
+         var force = transform.forward;
+
+         // Adjust acceleration according to framerate
+         force *= Time.fixedDeltaTime;
+
+         // Apply input acceleration
+         force *= inputAcceleration;
+
+         // Check if we are accelerating in the same direction as we're going
+         if (Math.Sign(inputAcceleration) == Math.Sign(ForwardSpeed))
+         {
+            // Choose the right propulsion direction
+            VehicleProperties.PropulsionProperties propulsion;
+            if (inputAcceleration > 0)
             {
-               // Choose the right propulsion direction
-               var propulsion = acceleration > 0
-                  ? m_VehicleProperties.Engine.ForwardPropulsion
-                  : m_VehicleProperties.Engine.BackwardPropulsion;
-
-               // Set engine power according to direction
-               force *= propulsion.Power;
-
-               // Reduce engine power the closer we are to the max speed in this direction
-               // TODO: add a velocity bias to TopSpeedProgression to reduce wobble in speed
-               force *= Mathf.Pow(1 - TopSpeedProgression, propulsion.DecayFactor);
+               CurrentPhysicsState = PhysicsState.Accelerating_forward;
+               propulsion = m_VehicleProperties.Engine.ForwardPropulsion;
             }
             else
-            // We're braking
-               force *= m_VehicleProperties.BrakesPower;
+            {
+               CurrentPhysicsState = PhysicsState.Accelerating_backward;
+               propulsion = m_VehicleProperties.Engine.BackwardPropulsion;
+            }
 
-            // Add final force to rigidbody
-            rb.AddForce(force);
+            // Set engine power according to direction
+            force *= propulsion.Power;
+
+            // Reduce engine power the closer we are to the max speed in this direction
+            // TODO: add a velocity bias to TopSpeedProgression to reduce wobble in speed
+            force *= Mathf.Pow(1 - TopSpeedProgression, propulsion.DecayFactor);
          }
-
-         #endregion
-
-         #region Side grip
-
+         else
          {
-            // Force is in the local x axis
-            var gripForce = transform.right;
-
-            // Adjust force according to framerate
-            gripForce *= Time.fixedDeltaTime;
-
-            // Compute current sideways speed
-            float currSidewaysSpeed = Vector3.Dot(rb.velocity, transform.right);
-
-            // Grip allows to stop some of the sideway force
-            gripForce *= -currSidewaysSpeed;
-            gripForce *= m_VehicleProperties.SideGrip;
-
-            // Add final force to rigidbody
-            rb.AddForce(gripForce);
+            CurrentPhysicsState = PhysicsState.Braking;
+            force *= m_VehicleProperties.BrakesPower;
          }
 
-         #endregion
+         // Add final force to rigidbody
+         GetComponent<Rigidbody>().AddForce(force);
+      }
 
-         #region Rotation
+      private void UpdateSideGrip()
+      {
+         // Force is in the local x axis
+         var gripForce = transform.right;
 
-         {
-            // Torque is around y axis
-            var torque = Vector3.up;
+         // Adjust force according to framerate
+         gripForce *= Time.fixedDeltaTime;
 
-            // Adjust rotation according to framerate
-            torque *= Time.fixedDeltaTime;
+         // Grip allows to stop some of the sideway force
+         gripForce *= -SidewaysSpeed;
+         gripForce *= m_VehicleProperties.SideGrip;
 
-            // Apply input rotation
-            torque *= m_PawnInputSrc.RotationAcceleration;
+         // Add final force to rigidbody
+         GetComponent<Rigidbody>().AddForce(gripForce);
+      }
 
-            // Apply engine rotation power
-            var propulsion = m_VehicleProperties.Engine.RotationalPropulsion;
-            torque *= propulsion.Power;
+      private void UpdateRotation()
+      {
+         // Torque is around y axis
+         var torque = Vector3.up;
 
-            // Reduce rotation power the closer we are to the max angular speed
-            float absVelocity = Mathf.Abs(rb.angularVelocity.y);
-            float accelProgression = Mathf.Clamp01(absVelocity / propulsion.MaxVelocity);
-            torque *= Mathf.Pow(1 - accelProgression, propulsion.DecayFactor);
+         // Adjust rotation according to framerate
+         torque *= Time.fixedDeltaTime;
 
-            // Add final torque to rigidbody
-            rb.AddTorque(torque);
-         }
+         // Apply input rotation
+         torque *= m_InputSrc.RotationAcceleration;
 
-         #endregion
+         // Apply engine rotation power
+         var propulsion = m_VehicleProperties.Engine.RotationalPropulsion;
+         torque *= propulsion.Power;
+
+         // Reduce rotation power the closer we are to the max angular speed
+         float absVelocity = Mathf.Abs(GetComponent<Rigidbody>().angularVelocity.y);
+         float accelProgression = Mathf.Clamp01(absVelocity / propulsion.MaxVelocity);
+         torque *= Mathf.Pow(1 - accelProgression, propulsion.DecayFactor);
+
+         // Add final torque to rigidbody
+         GetComponent<Rigidbody>().AddTorque(torque);
       }
 
       #endregion
+
+      // Used to smooth acceleration computation
    }
 }
