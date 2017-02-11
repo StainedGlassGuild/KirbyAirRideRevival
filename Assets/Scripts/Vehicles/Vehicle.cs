@@ -35,7 +35,7 @@ namespace FXGuild.Karr.Vehicles
       private APawnInputSource m_PawnInputSrc;
 
       [SerializeField, UsedImplicitly]
-      private VehiculeProperties m_VehiculeProperties;
+      private VehicleProperties m_VehicleProperties;
 
       #endregion
 
@@ -67,8 +67,8 @@ namespace FXGuild.Karr.Vehicles
          {
             // Choose the right propulsion direction
             var propulsion = ForwardSpeed > 0
-               ? m_VehiculeProperties.Engine.ForwardPropulsion
-               : m_VehiculeProperties.Engine.BackwardPropulsion;
+               ? m_VehicleProperties.Engine.ForwardPropulsion
+               : m_VehicleProperties.Engine.BackwardPropulsion;
 
             return Mathf.Clamp01(Mathf.Abs(ForwardSpeed) / propulsion.MaxVelocity);
          }
@@ -101,8 +101,8 @@ namespace FXGuild.Karr.Vehicles
             {
                // Choose the right propulsion direction
                var propulsion = acceleration > 0
-                  ? m_VehiculeProperties.Engine.ForwardPropulsion
-                  : m_VehiculeProperties.Engine.BackwardPropulsion;
+                  ? m_VehicleProperties.Engine.ForwardPropulsion
+                  : m_VehicleProperties.Engine.BackwardPropulsion;
 
                // Set engine power according to direction
                force *= propulsion.Power;
@@ -113,7 +113,7 @@ namespace FXGuild.Karr.Vehicles
             }
             else
             // We're braking
-               force *= m_VehiculeProperties.BrakesPower;
+               force *= m_VehicleProperties.BrakesPower;
 
             // Add final force to rigidbody
             rb.AddForce(force);
@@ -135,7 +135,7 @@ namespace FXGuild.Karr.Vehicles
 
             // Grip allows to stop some of the sideway force
             gripForce *= -currSidewaysSpeed;
-            gripForce *= m_VehiculeProperties.SideGrip;
+            gripForce *= m_VehicleProperties.SideGrip;
 
             // Add final force to rigidbody
             rb.AddForce(gripForce);
@@ -156,7 +156,7 @@ namespace FXGuild.Karr.Vehicles
             torque *= m_PawnInputSrc.RotationAcceleration;
 
             // Apply engine rotation power
-            var propulsion = m_VehiculeProperties.Engine.RotationalPropulsion;
+            var propulsion = m_VehicleProperties.Engine.RotationalPropulsion;
             torque *= propulsion.Power;
 
             // Reduce rotation power the closer we are to the max angular speed

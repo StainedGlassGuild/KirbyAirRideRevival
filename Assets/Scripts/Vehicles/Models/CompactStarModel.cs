@@ -17,45 +17,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
-
-namespace FXGuild.Karr.Vehicles
+namespace FXGuild.Karr.Vehicles.Model
 {
-   [Serializable]
-   public struct VehiculeProperties
-   {
-      #region Nested types
-
-      [Serializable]
-      public struct EngineProperties
-      {
-         public PropulsionProperties ForwardPropulsion;
-         public PropulsionProperties BackwardPropulsion;
-         public PropulsionProperties RotationalPropulsion;
-      }
-
-      #endregion
-
-      #region Nested types
-
-      [Serializable]
-      public struct PropulsionProperties
-      {
-         public float Power;
-         public float MaxVelocity;
-         public float DecayFactor;
-      }
-
-      #endregion
-
-      #region Private fields
-
-      public EngineProperties Engine;
-
-      public float BrakesPower;
-
-      public float SideGrip;
-
-      #endregion
-   }
+   public class CompactStarModel : AVehicleModel
+   {}
 }

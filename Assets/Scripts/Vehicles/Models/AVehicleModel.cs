@@ -17,64 +17,42 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
-
 using JetBrains.Annotations;
 
 using UnityEngine;
 
 namespace FXGuild.Karr.Vehicles.Model
 {
-   public sealed class BulkStar : AVehicleModel
+   public abstract class AVehicleModel : MonoBehaviour
    {
-      #region Nested types
+      #region Private fields
 
-      [Serializable]
-      private struct EngineRumbling
+      public Vector3 KirbySittingPosition;
+
+      #endregion
+
+      #region Properties
+
+      protected Vehicle ParentVehicle
       {
-         [UsedImplicitly]
-         public float BaseAmplitude;
-
-         [UsedImplicitly]
-         public float AmplitudeFactor;
-
-         [UsedImplicitly]
-         public float BaseFrequency;
-
-         [UsedImplicitly]
-         public float FrequencyFactor;
+         get { return transform.parent.GetComponent<Vehicle>(); }
       }
 
       #endregion
 
-      #region Private fields
+      #region Virtual methods
 
-      [SerializeField, UsedImplicitly]
-      private EngineRumbling m_EngineRumbling;
-
-      private float m_CurrRumblePhase;
+      protected virtual void UpdateAnimation()
+      {}
 
       #endregion
 
       #region Methods
 
       [UsedImplicitly]
-      private void Start()
+      private void Update()
       {
-         m_CurrRumblePhase = 0;
-      }
-
-      protected override void UpdateAnimation()
-      {
-         // Engine rumbling animation
-         float amplitude = m_EngineRumbling.BaseAmplitude +
-                           m_EngineRumbling.AmplitudeFactor * ParentVehicle.TopSpeedProgression;
-         float frequency = m_EngineRumbling.BaseFrequency +
-                           m_EngineRumbling.FrequencyFactor * ParentVehicle.TopSpeedProgression;
-         m_CurrRumblePhase += frequency * Time.deltaTime;
-         float rumble = amplitude * Mathf.Cos(m_CurrRumblePhase);
-         var engine = transform.Find("Engine");
-         engine.transform.localScale = Vector3.one * (1 + rumble);
+         UpdateAnimation();
       }
 
       #endregion

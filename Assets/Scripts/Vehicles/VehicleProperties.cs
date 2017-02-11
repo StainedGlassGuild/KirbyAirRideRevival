@@ -17,33 +17,44 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using JetBrains.Annotations;
+using System;
 
-using UnityEngine;
-
-namespace FXGuild.Karr.AssetRepository
+namespace FXGuild.Karr.Vehicles
 {
-   public sealed class PhysicMaterialRepository : MonoBehaviour
+   [Serializable]
+   public struct VehicleProperties
    {
-      #region Public fields
+      #region Nested types
 
-      public PhysicMaterial Tarmac;
-
-      #endregion
-
-      #region Properties
-
-      public static PhysicMaterialRepository Instance { get; private set; }
-
-      #endregion
-
-      #region Methods
-
-      [UsedImplicitly]
-      private void Awake()
+      [Serializable]
+      public struct EngineProperties
       {
-         Instance = this;
+         public PropulsionProperties ForwardPropulsion;
+         public PropulsionProperties BackwardPropulsion;
+         public PropulsionProperties RotationalPropulsion;
       }
+
+      #endregion
+
+      #region Nested types
+
+      [Serializable]
+      public struct PropulsionProperties
+      {
+         public float Power;
+         public float MaxVelocity;
+         public float DecayFactor;
+      }
+
+      #endregion
+
+      #region Private fields
+
+      public EngineProperties Engine;
+
+      public float BrakesPower;
+
+      public float SideGrip;
 
       #endregion
    }
