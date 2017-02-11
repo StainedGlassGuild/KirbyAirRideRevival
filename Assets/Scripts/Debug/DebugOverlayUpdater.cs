@@ -20,7 +20,7 @@
 using System.Linq;
 
 using FXGuild.Karr.Debug;
-using FXGuild.Karr.Pawn;
+using FXGuild.Karr.VehiculeSystem;
 
 using JetBrains.Annotations;
 
@@ -43,7 +43,7 @@ namespace FXGuild.Karr
         #region Private fields
 
         [SerializeField, UsedImplicitly]
-        private PawnController m_PawnController;
+        private Vehicle m_Vehicle;
 
         private Vector3[] m_AccelerationHistory;
         private int m_AccelerationHistoryIdx;
@@ -88,10 +88,10 @@ namespace FXGuild.Karr
         private void FixedUpdate()
         {
             // Get the rigidbody of the monitored pawn controller
-            var rb = m_PawnController.transform.GetComponent<Rigidbody>();
+            var rb = m_Vehicle.transform.GetComponent<Rigidbody>();
 
             // Update speed panel
-            float forwardSpeed = Vector3.Dot(rb.velocity, m_PawnController.transform.forward);
+            float forwardSpeed = Vector3.Dot(rb.velocity, m_Vehicle.transform.forward);
             UpdatePanel("Speed", "km/h", forwardSpeed, rb.velocity.magnitude);
 
             // Update acceleration panel
@@ -101,7 +101,7 @@ namespace FXGuild.Karr
             m_AccelerationHistoryIdx = (m_AccelerationHistoryIdx + 1) % VELOCIY_HISTORY_SIZE;
             var acceleration = m_AccelerationHistory.Aggregate(Vector3.zero,
                 (a_Current, a_Velocity) => a_Current + a_Velocity) / VELOCIY_HISTORY_SIZE;
-            float forwardAccel = Vector3.Dot(acceleration, m_PawnController.transform.forward);
+            float forwardAccel = Vector3.Dot(acceleration, m_Vehicle.transform.forward);
             UpdatePanel("Acceleration", "km/h²", forwardAccel, acceleration.magnitude);
 
             // Update angular speed panel

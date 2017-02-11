@@ -17,35 +17,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using JetBrains.Annotations;
-
 using UnityEngine;
 
-namespace FXGuild.Karr.Pawn.Input
+namespace FXGuild.Karr.VehiculeSystem.Input
 {
-   public sealed class ConstantPawnInputSource : APawnInputSource
+   public abstract class APawnInputSource : MonoBehaviour
    {
-      #region Private fields
-
-      [SerializeField, UsedImplicitly]
-      private float m_ForwardAcceleration;
-
-      [SerializeField, UsedImplicitly]
-      private float m_RotationAcceleration;
-
-      #endregion
-
       #region Properties
 
-      public override float ForwardAcceleration
-      {
-         get { return m_ForwardAcceleration; }
-      }
-
-      public override float RotationAcceleration
-      {
-         get { return m_RotationAcceleration; }
-      }
+      public abstract float ForwardAcceleration { get; }
+      public abstract float RotationAcceleration { get; }
 
       #endregion
    }

@@ -17,23 +17,44 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using UnityEngine;
+using System;
 
-namespace FXGuild.Karr.Pawn.Input
+namespace FXGuild.Karr.VehiculeSystem
 {
-   public sealed class PlayerPawnInputSource : APawnInputSource
+   [Serializable]
+   public struct VehiculeProperties
    {
-      #region Properties
+      #region Nested types
 
-      public override float ForwardAcceleration
+      [Serializable]
+      public struct EngineProperties
       {
-         get { return UnityEngine.Input.GetAxis("Secondary Vertical"); }
+         public PropulsionProperties ForwardPropulsion;
+         public PropulsionProperties BackwardPropulsion;
+         public PropulsionProperties RotationalPropulsion;
       }
 
-      public override float RotationAcceleration
+      #endregion
+
+      #region Nested types
+
+      [Serializable]
+      public struct PropulsionProperties
       {
-         get { return UnityEngine.Input.GetAxis("Main Horizontal"); }
+         public float Power;
+         public float MaxVelocity;
+         public float DecayFactor;
       }
+
+      #endregion
+
+      #region Private fields
+
+      public EngineProperties Engine;
+
+      public float BrakesPower;
+
+      public float SideGrip;
 
       #endregion
    }

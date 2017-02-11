@@ -31,7 +31,7 @@ namespace FXGuild.Karr
 
       private const float CITY_DIMENSIONS = 1000;
 
-      private const uint NUM_BUILDINGS = 50;
+      private const uint NUM_BUILDINGS = 150;
 
       private const float MIN_BUILDING_LATERAL_SIZE = 10f;
       private const float MAX_BUILDING_LATERAL_SIZE = 30f;
@@ -80,14 +80,14 @@ namespace FXGuild.Karr
          // Set material
          cube.GetComponent<MeshRenderer>().material = MaterialRepository.Instance.Building;
 
-         // 30 % of building are placed to become ramps
-         if (Random.value < 0.3)
+         // Some building are placed to become ramps
+         if (Random.value < 0.4)
          {
             var pos = trans.position;
-            pos.y = -1.5f;
+            pos.y = -5f;
             trans.position = pos;
             var angles = trans.rotation.eulerAngles;
-            angles.x = 30;
+            angles.x = 20;
             trans.rotation = Quaternion.Euler(angles);
          }
       }
