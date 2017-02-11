@@ -19,13 +19,13 @@
 
 using System;
 
-using FXGuild.Karr.VehiculeSystem.Input;
+using FXGuild.Karr.Vehicles.Input;
 
 using JetBrains.Annotations;
 
 using UnityEngine;
 
-namespace FXGuild.Karr.VehiculeSystem
+namespace FXGuild.Karr.Vehicles
 {
    public sealed class Vehicle : MonoBehaviour
    {
@@ -36,6 +36,43 @@ namespace FXGuild.Karr.VehiculeSystem
 
       [SerializeField, UsedImplicitly]
       private VehiculeProperties m_VehiculeProperties;
+
+      #endregion
+
+      #region Properties
+
+      /// <summary>
+      /// Current velocity
+      /// </summary>
+      public Vector3 Velocity
+      {
+         get { return GetComponent<Rigidbody>().velocity; }
+      }
+
+      /// <summary>
+      /// Current speed on the local forward axis (can be negative)
+      /// </summary>
+      public float ForwardSpeed
+      {
+         get { return Vector3.Dot(Velocity, transform.forward); }
+      }
+
+      /// <summary>
+      /// Value between 0 and 1 that tells how close is the current speed from the top speed.
+      /// Works for both propulsion directions.
+      /// </summary>
+      public float TopSpeedProgression
+      {
+         get
+         {
+            // Choose the right propulsion direction
+            var propulsion = ForwardSpeed > 0
+               ? m_VehiculeProperties.Engine.ForwardPropulsion
+               : m_VehiculeProperties.Engine.BackwardPropulsion;
+
+            return Mathf.Clamp01(Mathf.Abs(ForwardSpeed) / propulsion.MaxVelocity);
+         }
+      }
 
       #endregion
 
@@ -59,11 +96,8 @@ namespace FXGuild.Karr.VehiculeSystem
             float acceleration = m_PawnInputSrc.ForwardAcceleration;
             force *= acceleration;
 
-            // Compute current forward speed
-            float currForwardSpeed = Vector3.Dot(rb.velocity, transform.forward);
-
             // Check if we are accelerating in the same direction as we're going
-            if (Math.Sign(acceleration) == Math.Sign(currForwardSpeed))
+            if (Math.Sign(acceleration) == Math.Sign(ForwardSpeed))
             {
                // Choose the right propulsion direction
                var propulsion = acceleration > 0
@@ -74,10 +108,8 @@ namespace FXGuild.Karr.VehiculeSystem
                force *= propulsion.Power;
 
                // Reduce engine power the closer we are to the max speed in this direction
-               float absSpeed = Mathf.Abs(currForwardSpeed);
-               // TODO: add a velocity bias to reduce wobble in speed
-               float accelProgression = Mathf.Clamp01(absSpeed / propulsion.MaxVelocity);
-               force *= Mathf.Pow(1 - accelProgression, propulsion.DecayFactor);
+               // TODO: add a velocity bias to TopSpeedProgression to reduce wobble in speed
+               force *= Mathf.Pow(1 - TopSpeedProgression, propulsion.DecayFactor);
             }
             else
             // We're braking
@@ -126,7 +158,7 @@ namespace FXGuild.Karr.VehiculeSystem
             // Apply engine rotation power
             var propulsion = m_VehiculeProperties.Engine.RotationalPropulsion;
             torque *= propulsion.Power;
-            
+
             // Reduce rotation power the closer we are to the max angular speed
             float absVelocity = Mathf.Abs(rb.angularVelocity.y);
             float accelProgression = Mathf.Clamp01(absVelocity / propulsion.MaxVelocity);

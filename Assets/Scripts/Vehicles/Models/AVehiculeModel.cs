@@ -17,16 +17,36 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+using JetBrains.Annotations;
+
 using UnityEngine;
 
-namespace FXGuild.Karr.VehiculeSystem.Input
+namespace FXGuild.Karr.Vehicles.Model
 {
-   public abstract class APawnInputSource : MonoBehaviour
+   public abstract class AVehiculeModel : MonoBehaviour
    {
       #region Properties
 
-      public abstract float ForwardAcceleration { get; }
-      public abstract float RotationAcceleration { get; }
+      protected Vehicle ParentVehicle
+      {
+         get { return transform.parent.GetComponent<Vehicle>(); }
+      }
+
+      #endregion
+
+      #region Abstract methods
+
+      protected abstract void UpdateAnimation();
+
+      #endregion
+
+      #region Methods
+
+      [UsedImplicitly]
+      private void Update()
+      {
+         UpdateAnimation();
+      }
 
       #endregion
    }

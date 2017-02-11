@@ -20,7 +20,7 @@
 using System.Linq;
 
 using FXGuild.Karr.Debug;
-using FXGuild.Karr.VehiculeSystem;
+using FXGuild.Karr.Vehicles;
 
 using JetBrains.Annotations;
 

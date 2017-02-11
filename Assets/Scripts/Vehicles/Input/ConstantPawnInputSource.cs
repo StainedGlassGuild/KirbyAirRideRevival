@@ -17,44 +17,35 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
+using JetBrains.Annotations;
 
-namespace FXGuild.Karr.VehiculeSystem
+using UnityEngine;
+
+namespace FXGuild.Karr.Vehicles.Input
 {
-   [Serializable]
-   public struct VehiculeProperties
+   public sealed class ConstantPawnInputSource : APawnInputSource
    {
-      #region Nested types
-
-      [Serializable]
-      public struct EngineProperties
-      {
-         public PropulsionProperties ForwardPropulsion;
-         public PropulsionProperties BackwardPropulsion;
-         public PropulsionProperties RotationalPropulsion;
-      }
-
-      #endregion
-
-      #region Nested types
-
-      [Serializable]
-      public struct PropulsionProperties
-      {
-         public float Power;
-         public float MaxVelocity;
-         public float DecayFactor;
-      }
-
-      #endregion
-
       #region Private fields
 
-      public EngineProperties Engine;
+      [SerializeField, UsedImplicitly]
+      private float m_ForwardAcceleration;
 
-      public float BrakesPower;
+      [SerializeField, UsedImplicitly]
+      private float m_RotationAcceleration;
 
-      public float SideGrip;
+      #endregion
+
+      #region Properties
+
+      public override float ForwardAcceleration
+      {
+         get { return m_ForwardAcceleration; }
+      }
+
+      public override float RotationAcceleration
+      {
+         get { return m_RotationAcceleration; }
+      }
 
       #endregion
    }
