@@ -183,7 +183,7 @@ namespace FXGuild.Karr.Vehicles
          // Check there is some input
          if (Mathf.Abs(inputAcceleration) < 1e-6)
          {
-            CurrentPhysicsState = Mathf.Abs(ForwardSpeed) < 1e-3
+            CurrentPhysicsState = Mathf.Abs(ForwardSpeed) < 0.1f
                ? PhysicsState.Idle
                : ForwardSpeed > 0
                   ? PhysicsState.Loose_forward
@@ -254,7 +254,7 @@ namespace FXGuild.Karr.Vehicles
       private void UpdateRotation()
       {
          // Torque is around y axis
-         var torque = Vector3.up;
+         var torque = transform.up;
 
          // Adjust rotation according to framerate
          torque *= Time.fixedDeltaTime;
@@ -262,8 +262,12 @@ namespace FXGuild.Karr.Vehicles
          // Apply input rotation
          torque *= m_InputSrc.RotationAcceleration;
 
+         // Select appropriate rotational propulsion
+         var propulsion = CurrentPhysicsState == PhysicsState.Falling 
+            ? m_VehicleProperties.Engine.MidAirRotationalPropulsion 
+            : m_VehicleProperties.Engine.GroundRotationalPropulsion;
+
          // Apply engine rotation power
-         var propulsion = m_VehicleProperties.Engine.RotationalPropulsion;
          torque *= propulsion.Power;
 
          // Reduce rotation power the closer we are to the max angular speed

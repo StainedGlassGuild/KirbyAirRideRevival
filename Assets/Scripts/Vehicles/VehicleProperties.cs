@@ -31,7 +31,8 @@ namespace FXGuild.Karr.Vehicles
       {
          public PropulsionProperties ForwardPropulsion;
          public PropulsionProperties BackwardPropulsion;
-         public PropulsionProperties RotationalPropulsion;
+         public PropulsionProperties GroundRotationalPropulsion;
+         public PropulsionProperties MidAirRotationalPropulsion;
       }
 
       #endregion

@@ -38,7 +38,7 @@ namespace FXGuild.Karr.Vehicles
       [UsedImplicitly]
       private void Start()
       {
-         m_CurrModel = 0;
+         m_CurrModel = 1;
          ChangeModel();
       }
 
@@ -57,6 +57,15 @@ namespace FXGuild.Karr.Vehicles
          {
             m_CurrModel = (m_CurrModel + numModels - 1) % numModels;
             ChangeModel();
+         }
+
+         // TODO remove me one day
+         if (UnityEngine.Input.GetButtonDown("Respawn"))
+         {
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            transform.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            transform.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
          }
       }
 
