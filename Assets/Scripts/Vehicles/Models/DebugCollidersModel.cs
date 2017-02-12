@@ -17,48 +17,29 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using JetBrains.Annotations;
-
 using UnityEngine;
 
 namespace FXGuild.Karr.Vehicles.Model
 {
-   public abstract class AVehicleModel : MonoBehaviour
+   public class DebugCollidersModel : AVehicleModel
    {
-      #region Public fields
-
-      public Vector3 KirbySittingPosition;
-
-      #endregion
-
-      #region Properties
-
-      protected Vehicle ParentVehicle
-      {
-         get { return transform.parent.GetComponent<Vehicle>(); }
-      }
-
-      #endregion
-
-      #region Virtual methods
-
-      protected virtual void UpdateAnimation()
-      {}
-
-      public virtual void Initialize()
-      {}
-
-      public virtual void Dispose()
-      {}
-
-      #endregion
-
       #region Methods
 
-      [UsedImplicitly]
-      private void Update()
+      public override void Initialize()
       {
-         UpdateAnimation();
+         SetColliderVisible(true);
+      }
+
+      public override void Dispose()
+      {
+         SetColliderVisible(false);
+      }
+
+      private void SetColliderVisible(bool a_AreVisible)
+      {
+         var obj = transform.parent.FindChild("Ground Colliders");
+         for (int i = 0; i < obj.childCount; ++i)
+            obj.GetChild(i).GetComponent<MeshRenderer>().enabled = a_AreVisible;
       }
 
       #endregion

@@ -38,7 +38,7 @@ namespace FXGuild.Karr.Vehicles
       [UsedImplicitly]
       private void Start()
       {
-         m_CurrModel = 1;
+         m_CurrModel = 2;
          ChangeModel();
       }
 
@@ -75,6 +75,8 @@ namespace FXGuild.Karr.Vehicles
          var component = GetComponentInChildren<AVehicleModel>();
          if (component != null)
          {
+            // Give mode la chance to dispose itself
+            component.Dispose();
             Destroy(component.gameObject);
          }
 
@@ -90,9 +92,12 @@ namespace FXGuild.Karr.Vehicles
          obj.transform.localPosition = Vector3.zero;
          obj.transform.localRotation = Quaternion.identity;
 
+         // Give a chance to the model to do some initialization
+         var vehicleModel = obj.GetComponent<AVehicleModel>();
+         vehicleModel.Initialize();
+
          // Put Kirby at the correct position on the vehicle model
-         transform.Find("Kirby").localPosition =
-            obj.GetComponent<AVehicleModel>().KirbySittingPosition;
+         transform.Find("Kirby").localPosition = vehicleModel.KirbySittingPosition;
       }
 
       #endregion

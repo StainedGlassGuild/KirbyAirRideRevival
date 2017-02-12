@@ -142,8 +142,6 @@ namespace FXGuild.Karr.Vehicles
       [UsedImplicitly]
       private void OnCollisionStay(Collision a_CollisionInfo)
       {
-         foreach (var contact in a_CollisionInfo.contacts)
-            UnityEngine.Debug.DrawRay(contact.point, contact.normal * 10, Color.white);
          m_IsTouchingGround = true;
       }
 
